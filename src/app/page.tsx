@@ -97,7 +97,7 @@ export default function Portfolio() {
                   Projects
                 </button>
                 <button
-                  onClick={() => window.open("https://drive.google.com/file/d/11ZiOCBr1PixocP6x3QPapDbGBzMuxpPZ/view?usp=drive_link", "_blank")}
+                  onClick={() => window.open("https://drive.google.com/file/d/19x5JajKcDcALOdBKKvap2iXwo1hQsjOW/view?usp=drive_link", "_blank")}
                   className="px-4 py-2 text-gray-700 hover:bg-blue-500 hover:text-white rounded-lg transition-all duration-300 text-sm md:text-base"
                    >
                   Resume
