@@ -1,602 +1,671 @@
 'use client';
-import { SetStateAction, useState } from 'react'
-import { Code, Database, Globe, Smartphone, GitBranch, Zap, Cloud } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
+import {
+  personalInfo,
+  careerTimeline,
+  featuredWork,
+  blogPosts,
+  type Challenge,
+} from '../data/portfolioData';
 
-export default function Portfolio() {
-  const [currentSection, setCurrentSection] = useState(0)
+// ── Accent — neon orange, used for the scroll-highlighted borders ──
+const ACCENT = '#ff6a1a';
 
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId)
-    element?.scrollIntoView({ behavior: 'smooth' })
-  }
+// ── Tech stack icon map — local public/ assets ──
+const PUBLIC_ICON: Record<string, string | null> = {
+  react: '/react-icon.png',
+  expo: '/vite-icon.png',
+  fastapi: '/fastapi-icon.png',
+  postgres: '/postgress-icon.png',
+  redis: '/redis-icon.png',
+  supabase: '/supabase-icon.png',
+  turborepo: '/turborepo-icon.png',
+  astro: '/astro-icon.png',
+  cloudflare: '/cloudflare-icon.png',
+  aws: '/aws-icon.png',
+  convex: '/convex-icon.png',
+  figma: '/figma-icon.png',
+  vercel: '/vercel-icon.png',
+  shopify: '/shopify-icon.png',
+  jwt: '/jwt-icon.png',
+  postman: '/postman-icon.png',
+  docker: '/docker-icon.png',
+  qdrant: '/qdrant-icon.png',
+  github: '/githib-icon.png',
+  tailwind: '/tailwind-icon.png',
+  razorpay: '/Razorpay.png',
+  webhook: null,
+  hono: null,
+  clerk: null,
+};
 
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+const ICON_FALLBACK: Record<string, string> = {
+  webhook: '⚡',
+  hono: '🔥',
+  clerk: '🔐',
+  qdrant: '◈',
+};
 
-    const featuredProject = {
-    title: 'Tripzy Airline Booking Application',
-    description: 'A modern airline booking platform built with a microservices architecture—Search, Booking, and Notification—to ensure scalability and performance. Designed with a dual-layered UI/UX approach (Itinerary and Booking) to provide users with a smooth, end-to-end flight search and booking experience. Features include real-time flight data, seat selection, and a secure payment flow',
-    longDescription: 'Tripzy redefines modern travel booking with a user-friendly interface and robust backend. Built for performance and scalability, it includes real-time flight availability. With Redux for state management and modular React components, Tripzy ensures a smooth and intuitive user journey from search to checkout.',
-    tech: ['React.js','Redux','Node.js','Express.js','MongoDB', 'MySQL','Sequelize','Stripe API','CRON-JOBS',],
-    highlights: ['Itinerary Layer-Locks the price', 'Booking Layer-Locks the seat', 'Redux Payment Confirmation UI/UX','Search Microservice build on top of Global Distribution System'],
-  }
+function resolveIcon(icon?: string): { src: string | null; fallback: string | null } {
+  if (!icon) return { src: null, fallback: null };
+  const k = icon.toLowerCase();
+  const src = PUBLIC_ICON[k] ?? null;
+  const fallback = ICON_FALLBACK[k] ?? null;
+  return { src, fallback };
+}
 
-  const projects = [
-  {
-    title: 'Veloxa - Video Calling Application',
-    description: 'A peer-to-peer video calling app built using WebRTC and Socket.io, allowing real-time communication with custom room creation and seamless media stream handling.',
-    tech: ['TypeScript', 'WebRTC', 'React', 'Socket.io'],
-    link: 'https://github.com/Sohamm24/Veloxa'
-  },
-  {
-    title: 'Surge - My Own Version Control System',
-    description: 'A minimal version control system built from scratch using SHA-256 hashing for file tracking, commit history, and diff computation, mimicking Git-like functionality.',
-    tech: ['Node.js', 'SHA-256'],
-    link: 'https://github.com/Sohamm24/Surge-Version-Control-System'
-  },
-  {
-    title: 'LangSQL - Text to SQL Query Converter',
-    description: 'An AI-powered tool that converts natural language prompts into SQL queries using LLMs via LangFlow, HuggingFace, and Gemini APIs. Includes backend in Django and frontend in React.',
-    tech: ['Django', 'Node.js', 'HuggingFace', 'LangFlow', 'Gemini-API', 'React'],
-    link: 'https://github.com/Sohamm24/LangSQL'
-  },
-  {
-    title: 'Admin Dashboard for Sales',
-    description: 'An analytics dashboard for visualizing sales data using React and Chart.js. Features include bar, pie, and line charts with interactive filters and clean UI design.',
-    tech: ['React', 'Chart.js'],
-    link: 'https://github.com/Sohamm24/Merchant_Dashboard'
-  },
-  {
-    title: 'Nanavati Hospital Management System',
-    description: 'A hospital management system developed using Flask and SQLAlchemy. Includes patient registration, ward assignment, and appointment tracking through a secure interface.',
-    tech: ['Flask', 'SQLAlchemy', 'MySQL'],
-    link: 'https://github.com/Sohamm24/Hospital-Management-System.git'
-  },
-  {
-    title: 'Portfolio Website',
-    description: 'A responsive, animated portfolio built with Next.js and Tailwind CSS, showcasing your work and skills. Integrates smooth transitions using Framer Motion.',
-    tech: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Framer Motion'],
-    link: 'https://github.com/Sohamm24/portfolio-website.git'
-  }
-]
-
-
-
-  const goToSlide = (index: SetStateAction<number>) => {
-    setCurrentImageIndex(index);
-  }
+// ── Bullet row: icon (larger) + optional tech name label + bullet text. No outer box. ──
+function BulletRow({ text, icon }: { text: string; icon?: string }) {
+  const { src, fallback } = resolveIcon(icon);
+  // derive a short label from the icon key (e.g. "razorpay" → "Razorpay")
+  const label = icon ? icon.charAt(0).toUpperCase() + icon.slice(1) : null;
 
   return (
-   <div
-     className="min-h-screen"
-     style={{
-       background: `linear-gradient(to right, white, #8cc4ffff, #f08eebff, #fabb79ff, white)`
-     }}
-   >
-      
-      
-      <section id="hero" className="min-h-screen relative overflow-hidden">
-        {/* Navbar */}
-        <nav className="fixed top-0 w-full z-50 bg-white/50 backdrop-blur-sm border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <div className="flex items-center">
-                <span className="text-2xl font-bold text-black">&lt;/&gt;</span>
-              </div>
-              <div className="flex space-x-4">
-                <button 
-                  onClick={() => scrollToSection('about')}
-                  className="px-4 py-2 text-gray-700 hover:bg-blue-500 hover:text-white rounded-lg transition-all duration-300 text-sm md:text-base"
-                >
-                  About Me
-                </button>
-                <button 
-                  onClick={() => scrollToSection('projects')}
-                  className="px-4 py-2 text-gray-700 hover:bg-blue-500 hover:text-white rounded-lg transition-all duration-300 text-sm md:text-base"
-                >
-                  Projects
-                </button>
-                <button
-                  onClick={() => window.open("https://drive.google.com/file/d/19x5JajKcDcALOdBKKvap2iXwo1hQsjOW/view?usp=drive_link", "_blank")}
-                  className="px-4 py-2 text-gray-700 hover:bg-blue-500 hover:text-white rounded-lg transition-all duration-300 text-sm md:text-base"
-                   >
-                  Resume
-                </button>
-              </div>
-            </div>
-          </div>
-        </nav>
+    <li className="flex items-start gap-3 py-1.5">
+      {/* Icon container — fixed width so text aligns */}
+      <span className="flex-shrink-0 flex items-center gap-1.5 w-[90px]">
+        <span className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+          {src ? (
+            <Image src={src} alt={label || ''} width={20} height={20} className="object-contain" unoptimized />
+          ) : fallback ? (
+            <span className="text-[11px] leading-none text-zinc-400">{fallback}</span>
+          ) : (
+            // white dot fallback when no icon
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 inline-block" />
+          )}
+        </span>
+        {label && src ? (
+          <span className="text-[10px] text-zinc-600 leading-none truncate">{label}</span>
+        ) : null}
+      </span>
+      <span className="text-[12px] text-zinc-400 leading-[1.6]">{text}</span>
+    </li>
+  );
+}
 
-        <div className="absolute top-4 left-0 transform -translate-x-1/2 translate-y-1/4 sm:top-6 md:top-8">
-         <div className="w-16 h-16 sm:w-8 sm:h-8 md:w-64 md:h-64 animate-spin-slow">
-             <svg
-              viewBox="0 0 512 512"
-              fill="currentColor"
-              className="text-blue-300 w-full h-full"
-              xmlns="http://www.w3.org/2000/svg"
+// ── Tech tag pill — uses local public/ icons ──
+function TechTag({ name, icon }: { name: string; icon?: string }) {
+  const { src, fallback } = resolveIcon(icon);
+  return (
+    <span className="inline-flex items-center gap-[5px] text-[10px] text-zinc-500 border border-zinc-800 rounded px-[7px] py-[3px] leading-none">
+      {src ? (
+        <Image src={src} alt={name} width={11} height={11} className="object-contain" unoptimized />
+      ) : fallback ? (
+        <span className="text-[9px] leading-none">{fallback}</span>
+      ) : null}
+      {name}
+    </span>
+  );
+}
+
+// ── Live clock ──
+function Clock() {
+  const [time, setTime] = useState('--:--:--');
+  const [date, setDate] = useState('—');
+
+  useEffect(() => {
+    function tick() {
+      const n = new Date();
+      const p = (v: number) => String(v).padStart(2, '0');
+      setTime(`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`);
+      setDate(
+        n.toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+        })
+      );
+    }
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <div className="flex gap-4 font-mono text-[11px] text-zinc-700 mt-3 pt-3 border-t border-zinc-900">
+      <span className="text-zinc-600">{time}</span>
+      <span>{date}</span>
+    </div>
+  );
+}
+
+// ── Section header ──
+function SectionHeader({ title, active }: { title: string; active: boolean }) {
+  return (
+    <div className="flex items-center gap-3.5 mb-6 pt-8">
+      <span className="text-[12px] text-zinc-400 tracking-[0.06em] font-medium">{title}</span>
+      <div
+        className="flex-1 h-px transition-colors duration-700 ease-out"
+        style={{ backgroundColor: active ? ACCENT : 'rgb(24 24 27)' }}
+      />
+    </div>
+  );
+}
+
+// ── Square grid banner spanning the very top of the page, with the name overlaid ──
+function GridBanner({ name }: { name: string }) {
+  return (
+    <div className="relative w-full h-52 md:h-64 overflow-hidden">
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, rgba(255,255,255,0.078) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.078) 1px, transparent 1px)',
+          backgroundSize: '26px 26px',
+        }}
+      />
+      {/* radial glow so the grid doesn't feel flat */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 60% 100% at 50% 0%, rgba(255, 89, 0, 0.26), transparent 70%)',
+        }}
+      />
+      {/* fade to the page background at the bottom */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black" />
+
+      {/* name, top-left */}
+      <div className="absolute top-0 left-0 max-w-[860px] w-full mx-auto right-0">
+        <span className="block px-6 md:px-12 py-[26px] text-[13px] font-medium text-zinc-50 tracking-[-0.01em]">
+          {name}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// ── Chevron icon ──
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="9"
+      height="9"
+      viewBox="0 0 24 24"
+      fill="none"
+      className={`transition-transform duration-300 flex-shrink-0 ${open ? 'rotate-90' : ''
+        }`}
+    >
+      <path
+        d="M9 6l6 6-6 6"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+// ── Challenges & solutions — dark gray card theme ──
+function ChallengesDropdown({ challenges }: { challenges?: Challenge[] }) {
+  const [open, setOpen] = useState(false);
+
+  if (!challenges || challenges.length === 0) return null;
+
+  return (
+    <div className="mt-3">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-[#ff8a5c] transition-colors"
+        style={{ color: open ? ACCENT : undefined }}
+      >
+        <Chevron open={open} />
+        Challenges &amp; how I solved them
+      </button>
+      <div
+        className={`grid transition-all duration-300 ease-out ${open ? 'grid-rows-[1fr] opacity-100 mt-3' : 'grid-rows-[0fr] opacity-0'
+          }`}
+      >
+        <div className="overflow-hidden">
+          <ul className="space-y-3">
+            {challenges.map((c, i) => (
+              <li
+                key={i}
+                className="rounded-lg border border-zinc-700/50 bg-[#1a1a1a] px-4 py-3 text-[11.5px] leading-[1.65]"
               >
-             <path d="M487.4 315.7c3.6-23.3 3.6-47.1 0-70.4l-52.2-7.3c-4.6-15.8-11.3-30.7-19.9-44.5l30.4-43.4c-14.4-20.7-31.5-39-50.9-54.4l-42.4 31.2c-14.3-8.2-29.5-14.6-45.5-18.9L279.2 24c-23.3-3.6-47.1-3.6-70.4 0l-7.3 52.2c-15.8 4.6-30.7 11.3-44.5 19.9L113.6 65.7c-20.7 14.4-39 31.5-54.4 50.9l31.2 42.4c-8.2 14.3-14.6 29.5-18.9 45.5L24 232.8c-3.6 23.3-3.6 47.1 0 70.4l52.2 7.3c4.6 15.8 11.3 30.7 19.9 44.5l-30.4 43.4c14.4 20.7 31.5 39 50.9 54.4l42.4-31.2c14.3 8.2 29.5 14.6 45.5 18.9l7.3 52.2c23.3 3.6 47.1 3.6 70.4 0l7.3-52.2c15.8-4.6 30.7-11.3 44.5-19.9l43.4 30.4c20.7-14.4 39-31.5 54.4-50.9l-31.2-42.4c8.2-14.3 14.6-29.5 18.9-45.5l52.2-7.3zM256 336c-44.2 0-80-35.8-80-80s35.8-80 80-80 80 35.8 80 80-35.8 80-80 80z" />
-             </svg>
-        </div>
-        </div>
-
-
-        <div className="pt-16 sm:py-2 md:pt-32 min-h-screen flex items-center justify-center relative">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16">
-              
-              {/* Left side - Name and tagline */}
-              <div className="flex-1 text-center lg:text-left z-10">
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 animate-fade-in" style={{ fontFamily: "Lobster, cursive" }} >
-                  Hey,I'm Soham Narvankar
-                </h1>
-                <p className="text-lg sm:text-xl md:text-2xl text-gray-600 mb-8 animate-slide-up">
-                  Every great idea starts with npm init, and the logic flows from here
+                <p className="mb-1.5">
+                  <span className="font-semibold" style={{ color: '#ff9580' }}>
+                    Challenge —{' '}
+                  </span>
+                  <span className="text-zinc-400">{c.problem}</span>
                 </p>
-                
-                {/* Social links - show on mobile below text */}
-                <div className="flex justify-center lg:justify-start space-x-6 mb-8 lg:mb-0">
-                  <a href="https://www.linkedin.com/in/soham-narvankar-607998302/" className="p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-all duration-300 hover:scale-110">
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                    </svg>
-                  </a>
-                  <a href="https://github.com/Sohamm24" className="p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-all duration-300 hover:scale-110">
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                    </svg>
-                  </a>
-                  <button
-  type="button"
-  aria-label="Send email"
-  className="p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-all duration-300 hover:scale-110"
-  onClick={() => window.location.href = "mailto:sohamnarvankar24@gmail.com"}
->
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-  </svg>
-</button>
-
-                </div>
-              </div>
-              
-              <div className="flex-1 max-w-md lg:max-w-lg">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl blur-lg opacity-30 animate-pulse"></div>
-                  <div className="relative bg-white/90 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-2xl border border-white/20 transform hover:scale-105 transition-all duration-300">
-                    <h3 className="text-xl md:text-2xl font-bold text-gray-500 mb-3 text-left">
-                      Background
-                    </h3>
-                    <p className="text-gray-600 text-sm md:text-base leading-relaxed text-left">
-                      I am an undergraduate B.Tech Computer Engineering student at Vidyalankar Institute of Technology,
-                      Mumbai specializing in Artificial Intelligence and Machine Learning .Currently building my career
-                      in Mumbai and actively seeking opportunities in tech to contribute meaningfully and grow
-                    </p>  
-                  </div>
-                </div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div className="absolute bottom-0 right-0 transform translate-x-1/2 translate-y-1/2">
-            <div className="w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64 relative">
-              <div 
-                className="w-full h-full animate-spin-slow"
-                style={{
-                  background: 'rgba(207, 149, 251, 0.3)',
-                  clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)'
-                }}
-              ></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* About Section */}
-      <section id="about" className="py-16 md:py-24 relative overflow-hidden">
-
-        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 relative z-10">
-          <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-center text-white mb-6" style={{ fontFamily: "Lobster, cursive" }}>
-            Journey so far..
-          </h2>
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left side - Key highlights */}
-            <div className="space-y-6">
-              <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-xl border-l-4 border-blue-500 hover:shadow-md transition-all duration-300">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                  <Code className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">User Experience (UX) – React</h3>
-                  <p className="text-gray-700">Skilled in building smooth, user-friendly React interfaces focused on usability and design.</p>
-                </div>
-              </div>
-            
-              <div className="flex items-start space-x-4 p-4 bg-purple-50 rounded-xl border-l-4 border-purple-500 hover:shadow-md transition-all duration-300">
-                <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                  <Globe className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Backend Microservices, Authentication, WebRTC</h3>
-                  <p className="text-gray-700">Experienced in creating reliable backend systems, secure authentication, and real-time communication tools.</p>
-                </div>
-              </div>
-            
-              <div className="flex items-start space-x-4 p-4 bg-green-50 rounded-xl border-l-4 border-green-500 hover:shadow-md transition-all duration-300">
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                  <Cloud className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Cloud Services</h3>
-                  <p className="text-gray-700">Strong cloud expertise with active community involvement and scalable solutions.</p>
-                </div>
-              </div>
-            </div>
-
-
-
-            {/* Right side - Journey timeline */}
-            <div className="bg-gray-50 rounded-2xl p-8 shadow-sm border border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                My Career
-              </h3>
-              
-              <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="w-3 h-3 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
-                  <div>
-                    <div className="text-sm text-blue-600 font-medium">2023 - 2027</div>
-                    <div className="text-gray-900 font-medium">B.Tech in Computer Engineering</div>
-                    <div className="text-sm text-gray-600">Specialization in AIML, Gained expertise in Java, Networks, OS, Algorithms, Distributed Systems</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-4">
-                  <div className="w-3 h-3 bg-purple-300 rounded-full mt-2 flex-shrink-0"></div>
-                  <div>
-                    <div className="text-sm text-purple-600 font-medium">June 2024-July 2024</div>
-                    <div className="text-gray-900 font-medium">Digital Marketing Intern at IIDE-The Digital School</div>
-                    <div className="text-sm text-gray-600">SEO,Business expansion research analyst,Social Media Strategist</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-4">
-                  <div className="w-3 h-3 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
-                  <div>
-                    <div className="text-sm text-green-600 font-medium">October 2024-July 2025</div>
-                    <div className="text-gray-900 font-medium">Documentation Core</div>
-                    <div className="text-sm text-gray-600">Information Technology Students Association (ITSA)</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-7 gap-4">
-             <div className="text-center p-2 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
-              <div className="text-2xl mb-2">⚡</div>
-              <div className="text-sm font-medium text-gray-700">Node.js</div>
-            </div>
-            <div className="text-center p-2 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200">
-              <div className="text-2xl mb-2">🐍</div>
-              <div className="text-sm font-medium text-gray-700">Django</div>
-            </div>
-            <div className="text-center p-2 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-              <div className="text-2xl mb-2">🍃</div>
-              <div className="text-sm font-medium text-gray-700">MongoDB</div>
-            </div>
-            <div className="text-center p-2 bg-gradient-to-br from-cyan-50 to-blue-50 rounded-lg border border-cyan-200">
-              <div className="text-2xl mb-2">⚛️</div>
-              <div className="text-sm font-medium text-gray-700">React</div>
-            </div>
-            <div className="text-center p-2 bg-gradient-to-br from-red-50 to-pink-50 rounded-lg border border-red-200">
-              <div className="text-2xl mb-2">☁️</div>
-              <div className="text-sm font-medium text-gray-700">GCP</div>
-            </div>
-            <div className="text-center p-2 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
-              <div className="text-2xl mb-2">🔗</div>
-              <div className="text-sm font-medium text-gray-700">Sequelize</div>
-            </div>
-            <div className="text-center p-2 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border border-orange-200">
-              <div className="text-2xl mb-2">🔥</div>
-              <div className="text-sm font-medium text-gray-700">Firebase</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Projects Section */}
-      <section id="projects" className="py-16 md:py-24 bg-gray-50 relative overflow-hidden">
-      {/* Rotating Gear - Top Left */}
-      <div className="absolute top-0 left-0 transform -translate-x-1/2 translate-y-1/2">
-        <div className="w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 relative">
-          <div 
-            className="w-full h-full animate-spin-slow"
-            style={{
-              background: 'rgba(207, 149, 251, 0.3)',
-              clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'
-            }}
-          ></div>
-        </div>
-      </div>
-
-      {/* Hexagon Shape - Bottom Right */}
-      <div className="absolute bottom-0 right-0 transform translate-x-1/2 translate-y-1/2">
-        <div className="w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64 relative">
-          <div 
-            className="w-full h-full animate-spin-slow"
-            style={{
-              background: 'rgba(207, 149, 251, 0.3)',
-              clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)'
-            }}
-          ></div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
-        {/* Featured Project Section */}
-        <div className="mb-20">
-  <div className="flex items-center justify-center mb-8">
-    <div className="flex items-center gap-2">
-      <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-      <h3 className="text-2xl md:text-3xl font-bold text-black">Projects</h3>
-      <div className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></div>
-    </div>
-  </div>
-  
-  <div className="bg-white rounded-2xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-500">
-    <div className="p-8 md:p-12">
-      <div className="flex flex-col lg:flex-row gap-8 items-start">
-        <div className="lg:w-1/2 flex-shrink-0">
-          <div className="space-y-6">
-            <div className="w-full">
-              <Image
-                src="/PROJECT_DEMO_1.jpg"
-                alt="Featured Project Demo"
-                width={500}
-                height={400}
-                priority
-                className="rounded-lg shadow-lg w-full h-auto"
-              />
-            </div>
-            <div className="w-full">
-              <Image
-                src="/PROJECT_DEMO_2.png"
-                alt="Featured Project Demo"
-                width={500}
-                height={400}
-                priority
-                className="rounded-lg shadow-lg w-full h-auto"
-              />
-            </div>
-            <div className="w-full">
-              <Image
-                src="/PROJECT_DEMO_3.jpg"
-                alt="Featured Project Demo"
-                width={500}
-                height={400}
-                priority
-                className="rounded-lg shadow-lg w-full h-auto"
-              />
-            </div>
-          </div>
-        </div>
-      
-        <div className="lg:w-1/2">
-          <div className="text-center lg:text-left mb-6">
-            <span className="inline-block bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium mb-4">
-              ⭐ Featured
-            </span>
-            <h4 className="text-3xl md:text-4xl font-bold text-black mb-4">
-              {featuredProject.title}
-            </h4>
-            <p className="text-gray-600 mb-4 text-lg leading-relaxed">
-              {featuredProject.description}
-            </p>
-            <p className="text-gray-700 mb-6 text-base leading-relaxed">
-              {featuredProject.longDescription}
-            </p>
-          </div>
-          
-          <div className="mb-6">
-            <h5 className="text-xl font-semibold text-black mb-4">Key Features</h5>
-            <div className="grid grid-cols-1 gap-3">
-              {featuredProject.highlights.map((highlight, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                  <span className="text-gray-700 text-sm">{highlight}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        
-          <div className="mb-6">
-            <h5 className="text-xl font-semibold text-black mb-4">Tech Stack</h5>
-            <div className="flex flex-wrap gap-2">
-              {featuredProject.tech.map((tech) => (
-                <span 
-                  key={tech}
-                  className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium"
-                >
-                  {tech}
-                </span>
-              ))}
-            </div>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 font-medium">
-              View Live Demo
-            </button>
-            <a
-              href="https://github.com/Sohamm24/Flights-Booking-Service.git"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block px-6 py-2 border-2 border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors duration-200 font-medium"
-            >
-              View Code
-            </a>
-
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-      
-    
-        <div>
-          <h3 className="text-2xl md:text-3xl font-bold text-center text-black mb-12">
-            Other Projects
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((project, index) => (
-              <div 
-                key={project.title}
-                className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 animate-fade-in-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <h3 className="text-xl md:text-2xl font-bold text-black mb-4">{project.title}</h3>
-                <p className="text-gray-600 mb-4 text-sm md:text-base">{project.description}</p>
-                <div className="flex flex-wrap gap-2">
-                  {project.tech.map((tech) => (
-                    <span 
-                      key={tech}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs md:text-sm font-medium"
-                    >
-                      {tech}
-                    </span>                    
-                  ))}
-                </div>
-                <a 
-    href={project.link} 
-    target="_blank" 
-    rel="noopener noreferrer"
-    className="inline-block bg-white text-gray-600 px-4 py-2 rounded-lg hover:bg-blue-200 transition-colors duration-300 text-sm md:text-base font-medium"
-  >
-    Link
-  </a>
-              </div>
+                <p>
+                  <span className="font-semibold" style={{ color: '#7ec88a' }}>
+                    Solution —{' '}
+                  </span>
+                  <span className="text-zinc-400">{c.solution}</span>
+                </p>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Tracks which section is currently in view ──
+function useActiveSection(ids: string[]) {
+  const [active, setActive] = useState(ids[0]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActive(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: '-35% 0px -55% 0px', threshold: 0 }
+    );
+
+    const elements = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids.join(',')]);
+
+  return active;
+}
+
+// ── Scroll-reveal: vertical line + per-item fade-up ──
+function useTimelineVisible() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { rootMargin: '-10% 0px -10% 0px', threshold: 0.05 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, visible };
+}
+
+// ── Per-item vertical slide-up on scroll ──
+function useItemVisible() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { rootMargin: '0px 0px -60px 0px', threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, visible };
+}
+
+// ── Single animated journey item ──
+function TimelineItem({
+  item,
+  isLast,
+  delay,
+}: {
+  item: (typeof import('../data/portfolioData').careerTimeline)[number];
+  isLast: boolean;
+  delay: number;
+}) {
+  const { ref, visible } = useItemVisible();
+
+  return (
+    <div
+      ref={ref}
+      className={`relative ${!isLast ? 'pb-10' : 'pb-4'}`}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(20px)',
+        transition: `opacity 600ms ease-out ${delay}ms, transform 600ms cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+      }}
+    >
+      {/* Dot — centered on line via margin-left, no translateX */}
+      <span
+        className="absolute top-[5px] w-2.5 h-2.5 rounded-full border-2 flex-shrink-0"
+        style={{
+          borderColor: ACCENT,
+          backgroundColor: '#000',
+          left: 'calc(-1.5rem - 5px)',
+        }}
+      />
+
+      <div className="text-[11px] text-zinc-500 mb-0.5 leading-[1.5]">{item.period}</div>
+      <p className="text-[15px] text-zinc-100 mb-0.5 tracking-[-0.01em] font-medium">{item.role}</p>
+      <p className="text-[12px] text-zinc-500 mb-3">{item.org}</p>
+
+      {item.bullets && (
+        <ul className="space-y-0.5 mb-3">
+          {item.bullets.map((b, bi) => (
+            <BulletRow key={bi} text={b.text} icon={b.icon} />
+          ))}
+        </ul>
+      )}
+
+      <ChallengesDropdown challenges={item.challenges} />
+
+      {item.projects?.map((proj, pi) => (
+        <div key={pi} className="mt-5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[12px] text-zinc-300 font-medium">{proj.type}</span>
+          </div>
+          <ul className="space-y-0.5">
+            {proj.bullets.map((b, bi) => (
+              <BulletRow key={bi} text={b.text} icon={b.icon} />
+            ))}
+          </ul>
+          <ChallengesDropdown challenges={proj.challenges} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Core Interests & Behaviour ──
+const INTERESTS = [
+  {
+    icon: '/figma-icon.png' as string | null,
+    title: 'Figma is my playground',
+    body: "Before writing a single line of code, I'm already deep in Figma — pushing pixels, crafting flows, and obsessing over spacing. Design isn't a step for me, it's a mindset.",
+  },
+  {
+    icon: '/system-icon.png' as string | null,
+    title: 'Applications → System Design',
+    body: "The more I built apps, the more I started asking why they work at scale. That curiosity pulled me into system design — rate limiters, queue architectures, caching strategies. It's just applied curiosity.",
+  },
+  {
+    icon: '/pen-icon.png' as string | null,
+    title: 'Pen & paper > whiteboard',
+    body: "When I'm stuck, I close the laptop and reach for a notebook. There's something about drawing boxes and arrows by hand that unlocks thinking no IDE can replicate. Analog is underrated.",
+  },
+  {
+    icon: '/night-icon.png' as string | null,
+    title: '2 AM is the best time to code',
+    body: "Night owl engineer, unironically. The city goes quiet, the distractions disappear, and suddenly the cursor is flying. Some of my best work ships between midnight and 3 AM.",
+  },
+];
+
+function InterestsSection({ active }: { active: boolean }) {
+  return (
+    <section id="interests" className="mt-20 md:mt-28">
+      <SectionHeader title="more about me" active={active} />
+      <p className="text-[13px] text-zinc-500 mb-8 leading-[1.7]">
+        Beyond the work — how I actually think, build, and operate.
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {INTERESTS.map((item, i) => (
+          <div
+            key={i}
+            className="rounded-xl border border-zinc-800/70 bg-zinc-950 px-5 py-5 flex flex-col gap-3 hover:border-zinc-600 transition-colors duration-300"
+          >
+            <div className="flex items-center gap-3">
+              {item.icon ? (
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Image src={item.icon} alt={item.title} width={18} height={18} className="object-contain" unoptimized />
+                </div>
+              ) : (
+                <span className="text-xl leading-none">{(item as { emoji?: string }).emoji}</span>
+              )}
+              <span className="text-[13px] font-semibold text-zinc-200 tracking-[-0.01em]">
+                {item.title}
+              </span>
+            </div>
+            <p className="text-[12px] text-zinc-500 leading-[1.7]">{item.body}</p>
+          </div>
+        ))}
       </div>
     </section>
-      {/* Passions Section */}
-      <section id="passions" className="py-16 md:py-24 relative overflow-hidden">
-        {/* Rotating Gear - Top Left */}
-        <div className="absolute top-0 left-0 transform -translate-x-1/2 translate-y-1/2">
-          <div className="w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 relative">
-            <div 
-              className="w-full h-full animate-spin-slow"
-              style={{
-                background: 'rgba(207, 149, 251, 0.3)',
-                clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'
-              }}
-            ></div>
-          </div>
-        </div>
+  );
+}
 
-        {/* Hexagon Shape - Bottom Right */}
-        <div className="absolute bottom-0 right-0 transform translate-x-1/2 translate-y-1/2">
-          <div className="w-32 h-32 md:w-48 md:h-48 lg:w-64 lg:h-64 relative">
-            <div 
-              className="w-full h-full animate-spin-slow"
-              style={{
-                background: 'rgba(207, 149, 251, 0.3)',
-                clipPath: 'polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%)'
-              }}
-            ></div>
-          </div>
-        </div>
+// ── Main page ──
+export default function Portfolio() {
+  const year = new Date().getFullYear();
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-center text-white mb-12" style={{ fontFamily: "Lobster, cursive" }}>
-            Beyond Code
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+  const sectionIds = useMemo(() => ['intro', 'journey', 'work', 'writing', 'interests'], []);
+  const activeSection = useActiveSection(sectionIds);
+  const { ref: timelineRef, visible: timelineVisible } = useTimelineVisible();
+
+  const borderStyle = (id: string) => {
+    const isActive = activeSection === id;
+    return {
+      borderColor: isActive ? ACCENT : 'rgb(24 24 27)',
+      boxShadow: isActive
+        ? `0 0 0 1px ${ACCENT}55, 0 0 18px 2px ${ACCENT}66, 0 0 40px 6px ${ACCENT}33`
+        : '0 0 0 0 transparent',
+    };
+  };
+
+  return (
+    <div className="bg-[#000000] text-zinc-500 font-sans min-h-screen pb-16">
+      {/* ── Square grid banner ── */}
+      <GridBanner name={personalInfo.name} />
+
+      <div className="max-w-[860px] mx-auto px-6 md:px-12">
+        {/* ── Hero / Introduction ── */}
+        <section id="intro" className="pt-2 pb-12">
+          <h1 className="text-[40px] font-light text-zinc-50 tracking-[-0.04em] leading-[1.08] mb-1.5">
+            Software engineer.<br />
+            <em className="not-italic italic text-zinc-500 font-light">Simple and Relevant.</em>
+          </h1>
+          <p className="text-[18px] text-zinc-600 leading-[1.7] mb-8 max-w-[380px]">
+            {personalInfo.location}.
+          </p>
+          <div className="flex gap-[18px] items-center flex-wrap">
             {[
-              {
-                title: 'Fitness & Health',
-                description: 'Maintaining physical and mental well-being through regular exercise and mindful practices.',
-                icon: '💪'
-              },
-              {
-                title: 'Trekking',
-                description: 'Exploring mountain trails and nature paths, discovering breathtaking landscapes and pushing personal limits.',
-                icon: '🥾'
-              },
-              {
-                title: 'Video Editing',
-                description: 'Crafting compelling visual narratives through post-production, color grading, and creative storytelling.',
-                icon: '🎬'
-              },
-              {
-                title: 'Hackathons',
-                description: 'Participating in competitive coding events and innovation challenges to build solutions under pressure.',
-                icon: '💡'
-              }
-            ].map((passion, index) => (
-              <div 
-                key={passion.title}
-                className="text-center p-6 rounded-lg hover:bg-gray-50 transition-all duration-300 animate-fade-in-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="text-4xl md:text-5xl mb-4">{passion.icon}</div>
-                <h3 className="text-xl md:text-2xl font-bold text-black mb-4">{passion.title}</h3>
-                <p className="text-gray-600 text-sm md:text-base">{passion.description}</p>
-              </div>
+              { label: 'LinkedIn', href: personalInfo.linkedin },
+              { label: 'GitHub', href: personalInfo.github },
+              { label: 'Twitter', href: personalInfo.twitter },
+              { label: personalInfo.email, href: `mailto:${personalInfo.email}` },
+            ].map(({ label, href }, i, arr) => (
+              <React.Fragment key={label}>
+                <a
+                  href={href}
+                  target={href.startsWith('mailto') ? undefined : '_blank'}
+                  rel="noopener noreferrer"
+                  className="text-[12px] text-zinc-500 no-underline border-b border-zinc-700 pb-px hover:text-zinc-200 hover:border-zinc-500 transition-colors"
+                >
+                  {label}
+                </a>
+                {i < arr.length - 1 && (
+                  <span className="text-zinc-800 text-[11px]">·</span>
+                )}
+              </React.Fragment>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Footer */}
-      <footer className="bg-black text-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm md:text-base">&copy; 2024 Soham Narvankar. All rights reserved.</p>
+        {/* ── Code block ── */}
+        <div className="pb-11">
+          <div className="border border-zinc-900 rounded-[10px] px-[22px] py-5 relative">
+            <span className="absolute -top-px left-[18px] bg-[#09090b] px-[7px] text-[10px] text-zinc-600 tracking-[0.08em]">
+              soham.tsx
+            </span>
+            <div className="font-mono text-[11px] space-y-1">
+              {[
+                { n: 1, content: <><span className="text-zinc-500">const </span><span className="text-zinc-400">developer</span><span className="text-zinc-500"> = {'{'}</span></> },
+                { n: 2, content: <><span className="w-16 inline-block text-zinc-600">&nbsp;&nbsp;mission:</span><span style={{ color: '#ff9d80' }}> &quot;{personalInfo.headlineLine1}&quot;</span></> },
+                { n: 3, content: <><span className="w-16 inline-block text-zinc-600">&nbsp;&nbsp;craft:</span><span style={{ color: '#ffc978' }}> &quot;{personalInfo.headlineLine2}&quot;</span></> },
+                { n: 4, content: <><span className="w-16 inline-block text-zinc-600">&nbsp;&nbsp;output:</span><span style={{ color: '#ff8f5c' }}> &quot;{personalInfo.headlineLine3}&quot;</span></> },
+                { n: 5, content: <span className="text-zinc-500">{'}'}</span> },
+              ].map(({ n, content }) => (
+                <div key={n} className="flex items-baseline">
+                  <span className="w-[22px] flex-shrink-0 text-zinc-700 select-none">{n}</span>
+                  <span>{content}</span>
+                </div>
+              ))}
+            </div>
+            <Clock />
+          </div>
         </div>
-      </footer>
 
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slide-up {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes fade-in-up {
-          from { opacity: 0; transform: translateY(40px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 1s ease-out;
-        }
-        
-        .animate-slide-up {
-          animation: slide-up 1s ease-out 0.3s both;
-        }
-        
-        .animate-fade-in-up {
-          animation: fade-in-up 0.8s ease-out both;
-        }
-        
-        .animate-spin-slow {
-          animation: spin-slow 20s linear infinite;
-        }
-      `}</style>
+        {/* ── Journey — vertical timeline ── */}
+        <section id="journey" className="mt-20 md:mt-28">
+
+          <div className="mb-5">
+            <span className="text-[12px] text-zinc-400 tracking-[0.06em] font-medium">journey</span>
+          </div>
+
+          {/* Scroll-reveal vertical timeline */}
+          <div ref={timelineRef} className="relative">
+            {/* Vertical line — scaleY from top, no horizontal movement */}
+            <div
+              className="absolute left-0 top-0 bottom-0 w-px origin-top"
+              style={{
+                background: `linear-gradient(to bottom, ${ACCENT}cc, ${ACCENT}33)`,
+                transform: timelineVisible ? 'scaleY(1)' : 'scaleY(0)',
+                opacity: timelineVisible ? 1 : 0,
+                transition: 'transform 900ms cubic-bezier(0.16,1,0.3,1), opacity 900ms ease-out',
+              }}
+            />
+
+            <div className="ml-6">
+              {careerTimeline.map((item, idx) => (
+                <TimelineItem
+                  key={idx}
+                  item={item}
+                  isLast={idx === careerTimeline.length - 1}
+                  delay={idx * 120}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Work ── */}
+        <section
+          id="work"
+          className="border-2 rounded-xl px-5 md:px-7 -mx-5 md:-mx-7 mt-20 md:mt-28 transition-[border-color,box-shadow] duration-700 ease-out"
+          style={borderStyle('work')}
+        >
+          <SectionHeader title="work" active={activeSection === 'work'} />
+
+          <div className="border border-zinc-900 rounded-[10px] p-[26px]">
+            <span className="inline-block text-[10px] text-zinc-400 border border-zinc-700 rounded px-2 py-[3px] tracking-[0.04em] mb-[18px]">
+              featured · mobile app
+            </span>
+            <h2 className="text-[24px] text-zinc-50 font-light tracking-[-0.03em] mb-1">
+              {featuredWork.title}
+            </h2>
+            <p className="text-[12px] text-zinc-500 mb-4">{featuredWork.subtitle}</p>
+
+            {/* Highlights with icon bullet rows */}
+            <ul className="space-y-0.5 mb-5">
+              {featuredWork.highlights.map((h, i) => (
+                <BulletRow key={i} text={h.text} icon={h.icon} />
+              ))}
+            </ul>
+
+            <div className="mb-5">
+              <ChallengesDropdown challenges={featuredWork.challenges} />
+            </div>
+
+            <div className="flex gap-2">
+              {featuredWork.demoUrl && (
+                <a
+                  href={featuredWork.demoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[12px] text-zinc-50 bg-zinc-900 border border-zinc-700 rounded-md px-4 py-[7px] no-underline hover:bg-zinc-800 transition-colors tracking-[0.02em]"
+                >
+                  Prototype
+                </a>
+              )}
+              {featuredWork.githubUrl && (
+                <a
+                  href={featuredWork.githubUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[12px] text-zinc-400 bg-transparent border border-zinc-800 rounded-md px-4 py-[7px] no-underline hover:border-zinc-600 hover:text-zinc-300 transition-colors tracking-[0.02em]"
+                >
+                  GitHub
+                </a>
+              )}
+              {featuredWork.systemDesignUrl && (
+                <a
+                  href={featuredWork.systemDesignUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[12px] text-zinc-400 bg-transparent border border-zinc-800 rounded-md px-4 py-[7px] no-underline hover:border-zinc-600 hover:text-zinc-300 transition-colors tracking-[0.02em]"
+                >
+                  System design
+                </a>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Writing ── */}
+        <section
+          id="writing"
+          className="border-2 rounded-xl px-5 md:px-7 -mx-5 md:-mx-7 mt-20 md:mt-28 transition-[border-color,box-shadow] duration-700 ease-out"
+          style={borderStyle('writing')}
+        >
+          <SectionHeader title="top writing" active={activeSection === 'writing'} />
+
+          {blogPosts.map((post, idx) => (
+            <a
+              key={idx}
+              href={post.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between border-t border-zinc-900 py-4 no-underline last:border-b last:border-zinc-900 group"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="text-[10px] text-zinc-400 border border-zinc-700 rounded px-[7px] py-[2px] tracking-[0.04em] whitespace-nowrap">
+                  {post.tag}
+                </span>
+                <span className="text-[13px] text-zinc-400 group-hover:text-zinc-200 transition-colors">
+                  {post.title}
+                </span>
+              </div>
+              <span className="text-[11px] text-zinc-700 ml-4 flex-shrink-0">{post.date}</span>
+            </a>
+          ))}
+        </section>
+
+        {/* ── Core Interests & Behaviour ── */}
+        <InterestsSection active={activeSection === 'interests'} />
+
+        {/* ── Footer ── */}
+        <footer className="flex justify-between items-center pt-9">
+          <span className="text-[11px] text-zinc-700 tracking-[0.06em]">soham.narvankar</span>
+          <div className="flex gap-[18px]">
+            {[
+              { label: 'LinkedIn', href: personalInfo.linkedin },
+              { label: 'GitHub', href: personalInfo.github },
+              { label: 'Email', href: `mailto:${personalInfo.email}` },
+            ].map(({ label, href }) => (
+              <a
+                key={label}
+                href={href}
+                target={href.startsWith('mailto') ? undefined : '_blank'}
+                rel="noopener noreferrer"
+                className="text-[11px] text-zinc-700 no-underline hover:text-zinc-400 transition-colors"
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+          <span className="text-[11px] text-zinc-700">{year}</span>
+        </footer>
+      </div>
     </div>
-  )
+  );
 }
