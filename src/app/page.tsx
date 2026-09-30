@@ -5,12 +5,13 @@ import {
   personalInfo,
   careerTimeline,
   featuredWork,
+  additionalProjects,
   blogPosts,
   type Challenge,
 } from '../data/portfolioData';
 
 // ── Accent — neon orange, used for the scroll-highlighted borders ──
-const ACCENT = '#ff6a1a';
+const ACCENT = '#fe722792';
 
 // ── Tech stack icon map — local public/ assets ──
 const PUBLIC_ICON: Record<string, string | null> = {
@@ -55,32 +56,72 @@ function resolveIcon(icon?: string): { src: string | null; fallback: string | nu
   return { src, fallback };
 }
 
-// ── Bullet row: icon (larger) + optional tech name label + bullet text. No outer box. ──
-function BulletRow({ text, icon }: { text: string; icon?: string }) {
+// ── Card bullet — matches the "bracket card" reference design:
+//    rounded top-left corner, icon + label header row, description below. ──
+function CardBullet({ text, icon }: { text: string; icon?: string }) {
   const { src, fallback } = resolveIcon(icon);
-  // derive a short label from the icon key (e.g. "razorpay" → "Razorpay")
   const label = icon ? icon.charAt(0).toUpperCase() + icon.slice(1) : null;
 
   return (
-    <li className="flex items-start gap-3 py-1.5">
-      {/* Icon container — fixed width so text aligns */}
-      <span className="flex-shrink-0 flex items-center gap-1.5 w-[90px]">
-        <span className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+    <div className="relative rounded-tl-2xl border-t border-l border-zinc-700/70 pl-4 pt-4 pb-3 pr-3 hover:border-zinc-500 transition-colors duration-300">
+      <div className="flex items-center gap-2 mb-2.5">
+        <span className="w-7 h-7 rounded-full bg-[#0a0a0a] border border-zinc-800 flex items-center justify-center flex-shrink-0">
           {src ? (
-            <Image src={src} alt={label || ''} width={20} height={20} className="object-contain" unoptimized />
+            <Image src={src} alt={label || ''} width={15} height={15} className="object-contain" unoptimized />
           ) : fallback ? (
-            <span className="text-[11px] leading-none text-zinc-400">{fallback}</span>
+            <span className="text-[11px] leading-none text-zinc-300">{fallback}</span>
           ) : (
-            // white dot fallback when no icon
-            <span className="w-1.5 h-1.5 rounded-full bg-zinc-500 inline-block" />
+            <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 inline-block" />
           )}
         </span>
-        {label && src ? (
-          <span className="text-[10px] text-zinc-600 leading-none truncate">{label}</span>
-        ) : null}
-      </span>
-      <span className="text-[12px] text-zinc-400 leading-[1.6]">{text}</span>
-    </li>
+        {label && (
+          <span className="text-[11px] font-semibold text-zinc-200 tracking-[0.05em] uppercase">
+            {label}
+          </span>
+        )}
+      </div>
+      <p className="text-[12px] text-zinc-400 leading-[1.65]">{text}</p>
+    </div>
+  );
+}
+
+// ── Grid of card bullets — used for work / internship / project highlights ──
+function BulletCardGrid({ bullets }: { bullets?: { text: string; icon?: string }[] }) {
+  if (!bullets || bullets.length === 0) return null;
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+      {bullets.map((b, i) => (
+        <CardBullet key={i} text={b.text} icon={b.icon} />
+      ))}
+    </div>
+  );
+}
+
+// ── Education bullet list — plain bulleted list inside a bordered box,
+//    kept visually distinct from the work/internship card grid. ──
+function EducationBulletList({ bullets }: { bullets?: { text: string; icon?: string }[] }) {
+  if (!bullets || bullets.length === 0) return null;
+  return (
+    <ul className="border border-zinc-800 rounded-lg px-4 py-3.5 space-y-2 bg-[#070707]">
+      {bullets.map((b, i) => (
+        <li key={i} className="flex items-start gap-2.5 text-[12px] text-zinc-300 leading-[1.6]">
+          <span className="mt-[7px] w-1 h-1 rounded-full bg-zinc-500 flex-shrink-0" />
+          <span>{b.text}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// ── Decide whether a timeline entry is an education entry.
+//    Prefer an explicit `isEducation` flag on the item if you add one to
+//    portfolioData.ts; otherwise falls back to matching common degree/school
+//    keywords in the role or org fields. ──
+function isEducationEntry(item: { role?: string; org?: string; isEducation?: boolean }) {
+  if (item.isEducation) return true;
+  const haystack = `${item.role ?? ''} ${item.org ?? ''}`.toLowerCase();
+  return /engineering|b\.?tech|b\.?e\.?\b|university|college|bachelor|degree|computer science/.test(
+    haystack
   );
 }
 
@@ -123,9 +164,17 @@ function Clock() {
   }, []);
 
   return (
-    <div className="flex gap-4 font-mono text-[11px] text-zinc-700 mt-3 pt-3 border-t border-zinc-900">
-      <span className="text-zinc-600">{time}</span>
-      <span>{date}</span>
+    <div className="flex items-center justify-between gap-4 font-mono text-[11px] text-zinc-700 border-t border-zinc-800 bg-[#050505] px-4 py-3">
+      <div className="flex items-center gap-3 text-zinc-300">
+        <span className="flex items-center gap-2 text-[#dfe4ea]">
+          <span className="inline-block w-2 h-2 rounded-full bg-[#52d274] shadow-[0_0_8px_rgba(82,210,116,0.8)]" />
+          <span className="text-zinc-400">Live</span>
+        </span>
+        <span className="text-zinc-500">{time}</span>
+        <span className="text-zinc-700">|</span>
+        <span className="text-zinc-500">{date}</span>
+      </div>
+      <span className="text-[12px] text-[#ffb06b]">&lt;/&gt;</span>
     </div>
   );
 }
@@ -165,13 +214,6 @@ function GridBanner({ name }: { name: string }) {
       />
       {/* fade to the page background at the bottom */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black" />
-
-      {/* name, top-left */}
-      <div className="absolute top-0 left-0 max-w-[860px] w-full mx-auto right-0">
-        <span className="block px-6 md:px-12 py-[26px] text-[13px] font-medium text-zinc-50 tracking-[-0.01em]">
-          {name}
-        </span>
-      </div>
     </div>
   );
 }
@@ -210,7 +252,7 @@ function ChallengesDropdown({ challenges }: { challenges?: Challenge[] }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-[#ff8a5c] transition-colors"
+        className="flex items-center gap-1.5 text-[11px] text-zinc-300 hover:text-[#ff8a5c] transition-colors"
         style={{ color: open ? ACCENT : undefined }}
       >
         <Chevron open={open} />
@@ -231,13 +273,13 @@ function ChallengesDropdown({ challenges }: { challenges?: Challenge[] }) {
                   <span className="font-semibold" style={{ color: '#ff9580' }}>
                     Challenge —{' '}
                   </span>
-                  <span className="text-zinc-400">{c.problem}</span>
+                  <span className="text-zinc-300">{c.problem}</span>
                 </p>
                 <p>
                   <span className="font-semibold" style={{ color: '#7ec88a' }}>
                     Solution —{' '}
                   </span>
-                  <span className="text-zinc-400">{c.solution}</span>
+                  <span className="text-zinc-300">{c.solution}</span>
                 </p>
               </li>
             ))}
@@ -325,6 +367,7 @@ function TimelineItem({
   delay: number;
 }) {
   const { ref, visible } = useItemVisible();
+  const education = isEducationEntry(item);
 
   return (
     <div
@@ -346,16 +389,21 @@ function TimelineItem({
         }}
       />
 
-      <div className="text-[11px] text-zinc-500 mb-0.5 leading-[1.5]">{item.period}</div>
+      <div className="text-[11px] text-zinc-300 mb-1 leading-[1.5]">{item.period}</div>
+      <p className="text-[28px] md:text-[34px] font-bold tracking-[-0.04em] leading-[1.02] text-[#ff8a5c] mb-2">
+        {item.headline}
+      </p>
       <p className="text-[15px] text-zinc-100 mb-0.5 tracking-[-0.01em] font-medium">{item.role}</p>
-      <p className="text-[12px] text-zinc-500 mb-3">{item.org}</p>
+      <p className="text-[12px] text-zinc-300 mb-3">{item.org}</p>
 
       {item.bullets && (
-        <ul className="space-y-0.5 mb-3">
-          {item.bullets.map((b, bi) => (
-            <BulletRow key={bi} text={b.text} icon={b.icon} />
-          ))}
-        </ul>
+        <div className="mb-3">
+          {education ? (
+            <EducationBulletList bullets={item.bullets} />
+          ) : (
+            <BulletCardGrid bullets={item.bullets} />
+          )}
+        </div>
       )}
 
       <ChallengesDropdown challenges={item.challenges} />
@@ -365,11 +413,7 @@ function TimelineItem({
           <div className="flex items-center gap-2 mb-3">
             <span className="text-[12px] text-zinc-300 font-medium">{proj.type}</span>
           </div>
-          <ul className="space-y-0.5">
-            {proj.bullets.map((b, bi) => (
-              <BulletRow key={bi} text={b.text} icon={b.icon} />
-            ))}
-          </ul>
+          <BulletCardGrid bullets={proj.bullets} />
           <ChallengesDropdown challenges={proj.challenges} />
         </div>
       ))}
@@ -380,24 +424,24 @@ function TimelineItem({
 // ── Core Interests & Behaviour ──
 const INTERESTS = [
   {
-    icon: '/figma-icon.png' as string | null,
-    title: 'Figma is my playground',
-    body: "Before writing a single line of code, I'm already deep in Figma — pushing pixels, crafting flows, and obsessing over spacing. Design isn't a step for me, it's a mindset.",
+    icon: '/stitch.png',
+    title: 'Google Stitch',
+    body: "Generative UI Design that works as per my thoughts",
   },
   {
-    icon: '/system-icon.png' as string | null,
-    title: 'Applications → System Design',
-    body: "The more I built apps, the more I started asking why they work at scale. That curiosity pulled me into system design — rate limiters, queue architectures, caching strategies. It's just applied curiosity.",
+    icon: '/claude.png',
+    title: 'Claude Code',
+    body: "Coding Fast MVP Prototypes and broilerplate code",
   },
   {
-    icon: '/pen-icon.png' as string | null,
-    title: 'Pen & paper > whiteboard',
-    body: "When I'm stuck, I close the laptop and reach for a notebook. There's something about drawing boxes and arrows by hand that unlocks thinking no IDE can replicate. Analog is underrated.",
+    icon: '/atlassian.png',
+    title: 'Atlassian Jira & Confluent',
+    body: "Streamlining Project Managemen with Jira and Confluent workflows with detailed tracking",
   },
   {
-    icon: '/night-icon.png' as string | null,
-    title: '2 AM is the best time to code',
-    body: "Night owl engineer, unironically. The city goes quiet, the distractions disappear, and suddenly the cursor is flying. Some of my best work ships between midnight and 3 AM.",
+    icon: '/shopify.png',
+    title: 'Shopify',
+    body: "Managing E-commerce shops with real-time updates",
   },
 ];
 
@@ -405,28 +449,23 @@ function InterestsSection({ active }: { active: boolean }) {
   return (
     <section id="interests" className="mt-20 md:mt-28">
       <SectionHeader title="more about me" active={active} />
-      <p className="text-[13px] text-zinc-500 mb-8 leading-[1.7]">
-        Beyond the work — how I actually think, build, and operate.
+      <p className="text-[13px] text-zinc-300 mb-8 leading-[1.7]">
+        Tools which keep me relevant in 2026
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="flex flex-col gap-6">
         {INTERESTS.map((item, i) => (
           <div
             key={i}
-            className="rounded-xl border border-zinc-800/70 bg-zinc-950 px-5 py-5 flex flex-col gap-3 hover:border-zinc-600 transition-colors duration-300"
+            className="relative rounded-tl-2xl border-t border-l border-zinc-700/70 pl-6 pt-5 pb-5 pr-5 hover:border-zinc-500 transition-colors duration-300 flex flex-col md:flex-row md:items-center gap-5"
           >
-            <div className="flex items-center gap-3">
-              {item.icon ? (
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Image src={item.icon} alt={item.title} width={18} height={18} className="object-contain" unoptimized />
-                </div>
-              ) : (
-                <span className="text-xl leading-none">{(item as { emoji?: string }).emoji}</span>
-              )}
-              <span className="text-[13px] font-semibold text-zinc-200 tracking-[-0.01em]">
-                {item.title}
-              </span>
-            </div>
-            <p className="text-[12px] text-zinc-500 leading-[1.7]">{item.body}</p>
+            {item.icon && (
+              <div className="w-[140px] h-16 flex items-center justify-start flex-shrink-0">
+                <Image src={item.icon} alt={item.title} width={140} height={64} className={`object-contain object-left ${item.icon === '/stitch.png' ? 'rounded-3xl' : ''}`} unoptimized />
+              </div>
+            )}
+            <p className="text-[13px] text-zinc-200 font-normal leading-[1.6] m-0">
+              {item.body}
+            </p>
           </div>
         ))}
       </div>
@@ -440,7 +479,7 @@ export default function Portfolio() {
 
   const sectionIds = useMemo(() => ['intro', 'journey', 'work', 'writing', 'interests'], []);
   const activeSection = useActiveSection(sectionIds);
-  const { ref: timelineRef, visible: timelineVisible } = useTimelineVisible();
+  const { ref: timelineRef } = useTimelineVisible();
 
   const borderStyle = (id: string) => {
     const isActive = activeSection === id;
@@ -461,7 +500,7 @@ export default function Portfolio() {
         {/* ── Hero / Introduction ── */}
         <section id="intro" className="pt-2 pb-12">
           <h1 className="text-[40px] font-light text-zinc-50 tracking-[-0.04em] leading-[1.08] mb-1.5">
-            Software engineer.<br />
+            Soham Narvankar.<br />
             <em className="not-italic italic text-zinc-500 font-light">Simple and Relevant.</em>
           </h1>
           <p className="text-[18px] text-zinc-600 leading-[1.7] mb-8 max-w-[380px]">
@@ -493,20 +532,28 @@ export default function Portfolio() {
 
         {/* ── Code block ── */}
         <div className="pb-11">
-          <div className="border border-zinc-900 rounded-[10px] px-[22px] py-5 relative">
-            <span className="absolute -top-px left-[18px] bg-[#09090b] px-[7px] text-[10px] text-zinc-600 tracking-[0.08em]">
-              soham.tsx
-            </span>
-            <div className="font-mono text-[11px] space-y-1">
+          <div className="overflow-hidden rounded-[12px] border border-zinc-800 bg-[#000000] shadow-[0_0_0_1px_rgba(24,32,46,0.8)]">
+            <div className="flex items-center justify-between border-b border-zinc-800 bg-[#090909] px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="block w-2.5 h-2.5 rounded-full bg-[#f87171]" />
+                  <span className="block w-2.5 h-2.5 rounded-full bg-[#fbbf24]" />
+                  <span className="block w-2.5 h-2.5 rounded-full bg-[#4ade80]" />
+                </div>
+                <span className="font-mono text-[11px] tracking-[0.08em] text-zinc-400">soham.tsx</span>
+              </div>
+            </div>
+
+            <div className="font-mono text-[12px] md:text-[13px] leading-[1.6] px-[18px] py-5 bg-[#000000]">
               {[
-                { n: 1, content: <><span className="text-zinc-500">const </span><span className="text-zinc-400">developer</span><span className="text-zinc-500"> = {'{'}</span></> },
-                { n: 2, content: <><span className="w-16 inline-block text-zinc-600">&nbsp;&nbsp;mission:</span><span style={{ color: '#ff9d80' }}> &quot;{personalInfo.headlineLine1}&quot;</span></> },
-                { n: 3, content: <><span className="w-16 inline-block text-zinc-600">&nbsp;&nbsp;craft:</span><span style={{ color: '#ffc978' }}> &quot;{personalInfo.headlineLine2}&quot;</span></> },
-                { n: 4, content: <><span className="w-16 inline-block text-zinc-600">&nbsp;&nbsp;output:</span><span style={{ color: '#ff8f5c' }}> &quot;{personalInfo.headlineLine3}&quot;</span></> },
-                { n: 5, content: <span className="text-zinc-500">{'}'}</span> },
+                { n: 1, content: <><span className="text-zinc-500">const </span><span className="text-zinc-300">developer</span><span className="text-zinc-500"> = {'{'}</span></> },
+                { n: 2, content: <><span className="w-16 inline-block text-[#7db3ff]">&nbsp;&nbsp;mission:</span><span style={{ color: '#ff8b5c' }}> "{personalInfo.headlineLine1}"</span>,</> },
+                { n: 3, content: <><span className="w-16 inline-block text-[#7db3ff]">&nbsp;&nbsp;craft:</span><span style={{ color: '#ff8b5c' }}> "{personalInfo.headlineLine2}"</span>,</> },
+                { n: 4, content: <><span className="w-16 inline-block text-[#7db3ff]">&nbsp;&nbsp;output:</span><span style={{ color: '#ff8b5c' }}> "{personalInfo.headlineLine3}"</span></> },
+                { n: 5, content: <span className="text-zinc-500">{' }'}</span> },
               ].map(({ n, content }) => (
-                <div key={n} className="flex items-baseline">
-                  <span className="w-[22px] flex-shrink-0 text-zinc-700 select-none">{n}</span>
+                <div key={n} className="flex items-baseline gap-2">
+                  <span className="w-[22px] flex-shrink-0 text-zinc-600 select-none text-right">{n}</span>
                   <span>{content}</span>
                 </div>
               ))}
@@ -529,9 +576,9 @@ export default function Portfolio() {
               className="absolute left-0 top-0 bottom-0 w-px origin-top"
               style={{
                 background: `linear-gradient(to bottom, ${ACCENT}cc, ${ACCENT}33)`,
-                transform: timelineVisible ? 'scaleY(1)' : 'scaleY(0)',
-                opacity: timelineVisible ? 1 : 0,
-                transition: 'transform 900ms cubic-bezier(0.16,1,0.3,1), opacity 900ms ease-out',
+                opacity: 1,
+                transform: 'scaleY(1)',
+                transition: 'none',
               }}
             />
 
@@ -551,93 +598,162 @@ export default function Portfolio() {
         {/* ── Work ── */}
         <section
           id="work"
-          className="border-2 rounded-xl px-5 md:px-7 -mx-5 md:-mx-7 mt-20 md:mt-28 transition-[border-color,box-shadow] duration-700 ease-out"
-          style={borderStyle('work')}
+          className="mt-20 md:mt-28 transition-[border-color,box-shadow] duration-700 ease-out"
+          style={{}}
         >
           <SectionHeader title="work" active={activeSection === 'work'} />
 
-          <div className="border border-zinc-900 rounded-[10px] p-[26px]">
-            <span className="inline-block text-[10px] text-zinc-400 border border-zinc-700 rounded px-2 py-[3px] tracking-[0.04em] mb-[18px]">
-              featured · mobile app
-            </span>
-            <h2 className="text-[24px] text-zinc-50 font-light tracking-[-0.03em] mb-1">
-              {featuredWork.title}
-            </h2>
-            <p className="text-[12px] text-zinc-500 mb-4">{featuredWork.subtitle}</p>
+          <div className="space-y-10 p-0">
+            <div className="border border-zinc-900 rounded-[10px] p-[28px] min-h-[240px]">
+              <h2 className="text-[24px] text-zinc-50 font-light tracking-[-0.03em] mb-1">
+                {featuredWork.title}
+              </h2>
+              <p className="text-[28px] md:text-[34px] font-bold tracking-[-0.04em] leading-[1.02] text-[#ff8a5c] mb-3">
+                {featuredWork.headline}
+              </p>
+              <p className="text-[12px] text-zinc-300 mb-4">{featuredWork.subtitle}</p>
 
-            {/* Highlights with icon bullet rows */}
-            <ul className="space-y-0.5 mb-5">
-              {featuredWork.highlights.map((h, i) => (
-                <BulletRow key={i} text={h.text} icon={h.icon} />
-              ))}
-            </ul>
+              <div className="mb-5">
+                <BulletCardGrid bullets={featuredWork.highlights} />
+              </div>
 
-            <div className="mb-5">
-              <ChallengesDropdown challenges={featuredWork.challenges} />
+              <div className="mb-5">
+                <ChallengesDropdown challenges={featuredWork.challenges} />
+              </div>
             </div>
 
-            <div className="flex gap-2">
-              {featuredWork.demoUrl && (
-                <a
-                  href={featuredWork.demoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[12px] text-zinc-50 bg-zinc-900 border border-zinc-700 rounded-md px-4 py-[7px] no-underline hover:bg-zinc-800 transition-colors tracking-[0.02em]"
-                >
-                  Prototype
-                </a>
-              )}
-              {featuredWork.githubUrl && (
-                <a
-                  href={featuredWork.githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[12px] text-zinc-400 bg-transparent border border-zinc-800 rounded-md px-4 py-[7px] no-underline hover:border-zinc-600 hover:text-zinc-300 transition-colors tracking-[0.02em]"
-                >
-                  GitHub
-                </a>
-              )}
-              {featuredWork.systemDesignUrl && (
-                <a
-                  href={featuredWork.systemDesignUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[12px] text-zinc-400 bg-transparent border border-zinc-800 rounded-md px-4 py-[7px] no-underline hover:border-zinc-600 hover:text-zinc-300 transition-colors tracking-[0.02em]"
-                >
-                  System design
-                </a>
-              )}
-            </div>
+            {additionalProjects.map((project, idx) => (
+              <div key={idx} className="border border-zinc-900 rounded-[10px] p-[28px] min-h-[230px]">
+                <h3 className="text-[22px] text-zinc-50 font-light tracking-[-0.03em] mb-1">
+                  {project.title}
+                </h3>
+                <p className="text-[28px] md:text-[34px] font-bold tracking-[-0.04em] leading-[1.08] text-[#ff8a5c] mb-2">
+                  {project.headline}
+                </p>
+                <p className="text-[12px] text-zinc-300 mb-4">{project.subtitle}</p>
+
+                <div className="mb-5">
+                  <BulletCardGrid bullets={project.highlights} />
+                </div>
+
+                <div className="mb-5">
+                  <ChallengesDropdown challenges={project.challenges} />
+                </div>
+
+                <div className="flex gap-2">
+                  {project.demoUrl && (
+                    <a
+                      href={project.demoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[12px] text-zinc-50 bg-zinc-900 border border-zinc-700 rounded-md px-4 py-[7px] no-underline hover:bg-zinc-800 transition-colors tracking-[0.02em]"
+                    >
+                      Prototype
+                    </a>
+                  )}
+                  {project.githubUrl && (
+                    <a
+                      href={project.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[12px] text-zinc-400 bg-transparent border border-zinc-800 rounded-md px-4 py-[7px] no-underline hover:border-zinc-600 hover:text-zinc-300 transition-colors tracking-[0.02em]"
+                    >
+                      GitHub
+                    </a>
+                  )}
+                  {project.systemDesignUrl && (
+                    <a
+                      href={project.systemDesignUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[12px] text-zinc-400 bg-transparent border border-zinc-800 rounded-md px-4 py-[7px] no-underline hover:border-zinc-600 hover:text-zinc-300 transition-colors tracking-[0.02em]"
+                    >
+                      System design
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
         {/* ── Writing ── */}
         <section
           id="writing"
-          className="border-2 rounded-xl px-5 md:px-7 -mx-5 md:-mx-7 mt-20 md:mt-28 transition-[border-color,box-shadow] duration-700 ease-out"
-          style={borderStyle('writing')}
+          className="mt-20 md:mt-28 transition-[border-color,box-shadow] duration-700 ease-out"
         >
           <SectionHeader title="top writing" active={activeSection === 'writing'} />
 
-          {blogPosts.map((post, idx) => (
-            <a
-              key={idx}
-              href={post.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between border-t border-zinc-900 py-4 no-underline last:border-b last:border-zinc-900 group"
-            >
-              <div className="flex items-center gap-2.5">
-                <span className="text-[10px] text-zinc-400 border border-zinc-700 rounded px-[7px] py-[2px] tracking-[0.04em] whitespace-nowrap">
-                  {post.tag}
-                </span>
-                <span className="text-[13px] text-zinc-400 group-hover:text-zinc-200 transition-colors">
-                  {post.title}
-                </span>
-              </div>
-              <span className="text-[11px] text-zinc-700 ml-4 flex-shrink-0">{post.date}</span>
-            </a>
-          ))}
+          <p className="text-[28px] md:text-[34px] font-bold tracking-[-0.04em] leading-[1.08] text-[#ff8a5c] mb-6">
+            Blogs related to my Specialization in AI/ML
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {blogPosts.map((post, idx) => (
+              <a
+                key={idx}
+                href={post.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative flex flex-col overflow-hidden rounded-xl border border-zinc-800/80 bg-[#090909] hover:border-zinc-600 transition-all duration-300 no-underline"
+              >
+                {/* Banner image */}
+                <div className="relative aspect-[16/9] w-full overflow-hidden bg-zinc-950 border-b border-zinc-800/70">
+                  <Image
+                    src={post.banner}
+                    alt={post.title}
+                    fill
+                    className="object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
+                    unoptimized
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
+                </div>
+
+                {/* Content body */}
+                <div className="p-5 flex flex-col flex-1 justify-between gap-3 bg-[#0a0a0a]">
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] uppercase font-semibold tracking-wider text-zinc-300 bg-zinc-900 border border-zinc-700/80 rounded px-2 py-0.5">
+                        {post.tag}
+                      </span>
+                      <span className="text-[11px] text-zinc-500 font-mono flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#ff8a5c]" />
+                        {post.readTime ? `${post.readTime}` : post.date}
+                      </span>
+                    </div>
+
+                    <h3 className="text-[15px] font-semibold text-zinc-100 group-hover:text-[#ff8a5c] transition-colors leading-snug">
+                      {post.title}
+                    </h3>
+
+                    {post.description && (
+                      <p className="text-[12px] text-zinc-400 leading-[1.65]">
+                        {post.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-zinc-400 group-hover:text-zinc-200 transition-colors">
+                    <span className="font-medium">Read on Medium</span>
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    >
+                      <line x1="7" y1="17" x2="17" y2="7" />
+                      <polyline points="7 7 17 7 17 17" />
+                    </svg>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
         </section>
 
         {/* ── Core Interests & Behaviour ── */}

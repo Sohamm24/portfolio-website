@@ -18,6 +18,7 @@ export interface ProjectGroup {
 
 export interface CareerItem {
   period: string;
+  headline: string;
   role: string;
   org: string;
   color: 'blue' | 'teal' | 'orange';
@@ -28,6 +29,7 @@ export interface CareerItem {
 
 export interface WorkProject {
   title: string;
+  headline: string;
   subtitle: string;
   description: string;
   highlights: { text: string; icon?: string }[];
@@ -44,6 +46,9 @@ export interface BlogPost {
   date: string;
   tag: string;
   url: string;
+  banner: string;
+  description?: string;
+  readTime?: string;
 }
 
 export interface PersonalInfo {
@@ -74,7 +79,8 @@ export const personalInfo: PersonalInfo = {
 // ─── Career Timeline ────────────────────────────────────────────
 export const careerTimeline: CareerItem[] = [
   {
-    period: "July 2025 – April 2026",
+    period: "2025 – 2026",
+    headline: "1+ Years of Startup Experience",
     role: "Full Stack Developer Intern",
     org: "Krityam Solutions and Services",
     color: "orange",
@@ -145,7 +151,8 @@ export const careerTimeline: CareerItem[] = [
   },
   {
     period: "2023 – 2027",
-    role: "B.Tech in Computer Engineering",
+    headline: "Computer Engineering",
+    role: "B.Tech ( Honours in AI & ML )",
     org: "Vidyalankar Institute of Technology",
     color: "blue",
     bullets: [
@@ -158,6 +165,7 @@ export const careerTimeline: CareerItem[] = [
 // ─── Featured Work ──────────────────────────────────────────────
 export const featuredWork: WorkProject = {
   title: "Troupe",
+  headline: "My Whole Development Journey in One Project",
   subtitle: "Mobile App where Trip Organizers plan Itineraries for Like-minded Travelers",
   description:
     "Built a secure payment system by integrating Razorpay SDK in-app with Webhook event handling and idempotency keys to prevent duplicate payments. Implemented seat-holding mechanism with cron jobs to clean up expired bookings. Real-time chat using WebSockets, Redis presence indicators and message queues for scalable processing. Optimized media uploads via server-generated presigned URLs. Seamless token-refresh authentication.",
@@ -202,30 +210,60 @@ export const featuredWork: WorkProject = {
   ],
 };
 
+export const additionalProjects: WorkProject[] = [
+  {
+    title: "TrustDesk AI",
+    headline: "Customer support AI agents with zero trust security",
+    subtitle: "A working prototype for AI-first customer workflows with strict identity controls and secure escalation paths.",
+    description:
+      "Dummy placeholder project for a customer support intelligence platform where AI agents handle triage, summarization, and policy-aware responses without compromising security boundaries.",
+    highlights: [
+      { text: "AI customer triage with human fallback and policy enforcement", icon: "jwt" },
+      { text: "Zero-trust access checks for tool invocation and sensitive data", icon: "clerk" },
+      { text: "Audit logs, session isolation, and controlled escalation for support agents", icon: "docker" },
+    ],
+    techStack: [
+      { name: "FastAPI", icon: "fastapi" },
+      { name: "React", icon: "react" },
+      { name: "PostgreSQL", icon: "postgres" },
+      { name: "JWT", icon: "jwt" },
+      { name: "Docker", icon: "docker" },
+    ],
+    images: [],
+    githubUrl: "https://github.com/",
+    demoUrl: "https://github.com/",
+    systemDesignUrl: "https://github.com/",
+    challenges: [
+      {
+        problem: "Support automation risked leaking internal context to the wrong agent or workflow.",
+        solution: "Introduced role-aware guardrails and zero-trust enforcement before any tool or data access was allowed.",
+      },
+      {
+        problem: "Escalations in live support needed to remain transparent without exposing sensitive records.",
+        solution: "Built a reviewed handoff layer with scoped context and full audit trails for every decision.",
+      },
+    ],
+  },
+];
+
 // ─── Blog Posts ─────────────────────────────────────────────────
 export const blogPosts: BlogPost[] = [
   {
-    title: "Why idempotency keys matter in payment systems",
-    date: "Jul 2025",
-    tag: "Backend",
-    url: "https://x.com/",
+    title: "How to Combine Optuna and K-Fold Cross-Validation",
+    date: "Medium",
+    tag: "AI / ML",
+    url: "https://medium.com/@sohamnarvankar24/how-to-combine-optuna-and-k-fold-cross-validation-4db69da5fe95",
+    banner: "/optuna-post.png",
+    description: "A practical guide to implementing Bayesian hyperparameter optimization across K-Fold cross-validation splits for robust model evaluation.",
+    readTime: "4 min read",
   },
   {
-    title: "Building real-time chat at scale with Redis & WebSockets",
-    date: "Jun 2025",
-    tag: "System Design",
-    url: "https://x.com/",
-  },
-  {
-    title: "Monorepos with Turborepo — what I learnt shipping two products",
-    date: "May 2025",
-    tag: "DevEx",
-    url: "https://x.com/",
-  },
-  {
-    title: "CLIP embeddings + Qdrant: AI recommendations without a PhD",
-    date: "Apr 2025",
-    tag: "AI/ML",
-    url: "https://x.com/",
+    title: "Decoding OpenAI's CLIP: The Trade-Offs of Speed, Scale, and Efficiency",
+    date: "Medium",
+    tag: "AI / ML",
+    url: "https://medium.com/@sohamnarvankar24/decoding-openais-clip-the-trade-offs-of-speed-scale-and-efficiency-adc74fa4fb75",
+    banner: "/clip-post.png",
+    description: "An architectural exploration of contrastive multimodal learning, joint embedding spaces, and the practical trade-offs in scaling vision-language models.",
+    readTime: "5 min read",
   },
 ];
