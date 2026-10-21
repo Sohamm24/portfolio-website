@@ -36,6 +36,13 @@ const PUBLIC_ICON: Record<string, string | null> = {
   github: '/githib-icon.png',
   tailwind: '/tailwind-icon.png',
   razorpay: '/Razorpay.png',
+  kafka: '/kafka-icon.png',
+  spark: '/spark-icon.png',
+  deltalake: '/deltalake-icon.png',
+  'delta-lake': '/deltalake-icon.png',
+  lightgbm: '/lightgbm-icon.png',
+  youtube: '/youtube-icon.png',
+  openrouter: '/OpenRouter.png',
   webhook: null,
   hono: null,
   clerk: null,
@@ -45,22 +52,57 @@ const ICON_FALLBACK: Record<string, string> = {
   webhook: '⚡',
   hono: '🔥',
   clerk: '🔐',
-  qdrant: '◈',
+  duckdb: '🦆',
+  python: '🐍',
 };
 
-function resolveIcon(icon?: string): { src: string | null; fallback: string | null } {
-  if (!icon) return { src: null, fallback: null };
+const ICON_LABELS: Record<string, string> = {
+  react: 'React',
+  expo: 'Expo / Mobile',
+  fastapi: 'FastAPI',
+  postgres: 'PostgreSQL',
+  redis: 'Redis',
+  supabase: 'Supabase',
+  turborepo: 'Turborepo',
+  astro: 'Astro',
+  cloudflare: 'Cloudflare',
+  aws: 'AWS Cloud',
+  convex: 'Convex',
+  figma: 'Figma',
+  vercel: 'Vercel',
+  shopify: 'Shopify',
+  jwt: 'JWT Security',
+  postman: 'Postman',
+  docker: 'Docker',
+  qdrant: 'Qdrant Vector DB',
+  github: 'GitHub',
+  tailwind: 'Tailwind CSS',
+  razorpay: 'Razorpay',
+  kafka: 'Apache Kafka',
+  spark: 'Apache Spark',
+  deltalake: 'Delta Lake',
+  'delta-lake': 'Delta Lake',
+  lightgbm: 'LightGBM ML',
+  youtube: 'YouTube API',
+  openrouter: 'OpenRouter AI',
+  webhook: 'Webhooks',
+  hono: 'Hono API',
+  clerk: 'Clerk Auth',
+};
+
+function resolveIcon(icon?: string): { src: string | null; fallback: string | null; label: string | null } {
+  if (!icon) return { src: null, fallback: null, label: null };
   const k = icon.toLowerCase();
   const src = PUBLIC_ICON[k] ?? null;
   const fallback = ICON_FALLBACK[k] ?? null;
-  return { src, fallback };
+  const label = ICON_LABELS[k] ?? (icon.charAt(0).toUpperCase() + icon.slice(1));
+  return { src, fallback, label };
 }
 
 // ── Card bullet — matches the "bracket card" reference design:
 //    rounded top-left corner, icon + label header row, description below. ──
 function CardBullet({ text, icon }: { text: string; icon?: string }) {
-  const { src, fallback } = resolveIcon(icon);
-  const label = icon ? icon.charAt(0).toUpperCase() + icon.slice(1) : null;
+  const { src, fallback, label } = resolveIcon(icon);
 
   return (
     <div className="relative rounded-tl-2xl border-t border-l border-zinc-700/70 pl-4 pt-4 pb-3 pr-3 hover:border-zinc-500 transition-colors duration-300">
@@ -620,6 +662,19 @@ export default function Portfolio() {
               <div className="mb-5">
                 <ChallengesDropdown challenges={featuredWork.challenges} />
               </div>
+
+              {featuredWork.githubUrl && (
+                <div className="flex gap-2">
+                  <a
+                    href={featuredWork.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[12px] text-zinc-400 bg-transparent border border-zinc-800 rounded-md px-4 py-[7px] no-underline hover:border-zinc-600 hover:text-zinc-300 transition-colors tracking-[0.02em]"
+                  >
+                    GitHub
+                  </a>
+                </div>
+              )}
             </div>
 
             {additionalProjects.map((project, idx) => (
@@ -641,16 +696,6 @@ export default function Portfolio() {
                 </div>
 
                 <div className="flex gap-2">
-                  {project.demoUrl && (
-                    <a
-                      href={project.demoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[12px] text-zinc-50 bg-zinc-900 border border-zinc-700 rounded-md px-4 py-[7px] no-underline hover:bg-zinc-800 transition-colors tracking-[0.02em]"
-                    >
-                      Prototype
-                    </a>
-                  )}
                   {project.githubUrl && (
                     <a
                       href={project.githubUrl}
@@ -659,16 +704,6 @@ export default function Portfolio() {
                       className="text-[12px] text-zinc-400 bg-transparent border border-zinc-800 rounded-md px-4 py-[7px] no-underline hover:border-zinc-600 hover:text-zinc-300 transition-colors tracking-[0.02em]"
                     >
                       GitHub
-                    </a>
-                  )}
-                  {project.systemDesignUrl && (
-                    <a
-                      href={project.systemDesignUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[12px] text-zinc-400 bg-transparent border border-zinc-800 rounded-md px-4 py-[7px] no-underline hover:border-zinc-600 hover:text-zinc-300 transition-colors tracking-[0.02em]"
-                    >
-                      System design
                     </a>
                   )}
                 </div>

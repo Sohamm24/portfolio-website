@@ -9,9 +9,7 @@ export interface Challenge {
 }
 
 export interface ProjectGroup {
-  name: string;
   type: string;
-  techStack: TechItem[];
   bullets: { text: string; icon?: string }[];
   challenges?: Challenge[];
 }
@@ -31,9 +29,7 @@ export interface WorkProject {
   title: string;
   headline: string;
   subtitle: string;
-  description: string;
   highlights: { text: string; icon?: string }[];
-  techStack: TechItem[];
   images: string[];
   githubUrl?: string;
   demoUrl?: string;
@@ -79,71 +75,58 @@ export const personalInfo: PersonalInfo = {
 // ─── Career Timeline ────────────────────────────────────────────
 export const careerTimeline: CareerItem[] = [
   {
-    period: "2025 – 2026",
-    headline: "1+ Years of Startup Experience",
-    role: "Full Stack Developer Intern",
-    org: "Krityam Solutions and Services",
+    period: "July 2025 – April 2026",
+    headline: "Full Stack Developer Intern",
+    role: "Krityam Solutions and Services",
+    org: "Startup environment · Web & Mobile platforms, cloud integrations & AI features",
     color: "orange",
     projects: [
       {
-        name: "Real Estate Platform",
         type: "Web Development",
-        techStack: [
-          { name: "Turborepo", icon: "turborepo" },
-          { name: "Clerk", icon: "clerk" },
-          { name: "Convex", icon: "convex" },
-          { name: "Astro", icon: "astro" },
-          { name: "React", icon: "react" },
-        ],
         bullets: [
-          { text: "Faster dev cycles via monorepo architecture using Turborepo", icon: "turborepo" },
-          { text: "Astro Framework for content driven and SEO friendly websites", icon: "astro" },
+          { text: "Fast, modern web interfaces built for landowners and builders with Astro and React", icon: "astro" },
+          { text: "Instant cloud data synchronization and real-time updates powered by Convex", icon: "convex" },
+          { text: "Single codebase setup with Turborepo so shared components and logic update everywhere instantly", icon: "turborepo" },
+          { text: "Seamless, secure user login and permission management using Clerk", icon: "clerk" },
+          { text: "Global, high-speed hosting and domain routing via Vercel and Cloudflare DNS", icon: "vercel" },
         ],
         challenges: [
           {
             problem:
-              "Shared UI and types drifted out of sync across the builder and landowner apps as the monorepo grew.",
+              "Shared user interface and logic drifted out of sync between the builder and landowner applications as the project expanded.",
             solution:
-              "Introduced a shared internal package with Turborepo's build cache and pipeline scoping, so changes propagate to every app on the next build without manual copying.",
+              "Created a shared internal package with automated build caching, ensuring any design or logic change instantly updates both apps without manual copying.",
           },
           {
             problem:
-              "Convex's real-time subscriptions caused unnecessary re-renders on large landowner dashboards.",
+              "Frequent real-time data updates caused entire landowner dashboards to re-render, slowing down the page on large property lists.",
             solution:
-              "Scoped queries down to the exact fields each view needed and memoized derived state, cutting re-renders significantly.",
+              "Fine-tuned data queries so each screen only listens to the exact data it needs, keeping the dashboard snappy and responsive.",
           },
         ],
       },
       {
-        name: "AI Snack Recommender",
-        type: "Mobile App Development",
-        techStack: [
-          { name: "Cloudflare Workers", icon: "cloudflare" },
-          { name: "Hono", icon: "hono" },
-          { name: "Hookdeck", icon: "webhook" },
-          { name: "Cloudflare R2", icon: "cloudflare" },
-          { name: "Qdrant", icon: "qdrant" },
-          { name: "AWS", icon: "aws" },
-        ],
+        type: "App Development",
         bullets: [
-          { text: "Serverless APIs with Cloudflare Workers + Hono, reducing cold-start overhead", icon: "cloudflare" },
-          { text: "Real-time product sync via Shopify webhooks + Hookdeck — 99% delivery reliability", icon: "shopify" },
-          { text: "Media storage via Cloudflare R2 with CDN-backed image delivery", icon: "cloudflare" },
-          { text: "AI recommendations using CLIP embeddings + Qdrant vector search", icon: "qdrant" },
-          { text: "Production ML inference on AWS serverless containers", icon: "aws" },
+          { text: "Cross-platform mobile shopping app created with React Native & Expo for smooth iOS and Android experiences", icon: "react" },
+          { text: "High-speed serverless APIs built on Cloudflare Workers and Hono for instant app responses", icon: "cloudflare" },
+          { text: "Instant store catalog synchronization using Shopify webhooks and Hookdeck with 99% guaranteed delivery", icon: "shopify" },
+          { text: "Lightning-fast product photos served worldwide through Cloudflare R2 storage and CDN caching", icon: "cloudflare" },
+          { text: "Visual 'find similar snacks' recommendations powered by CLIP image AI and Qdrant vector search", icon: "qdrant" },
+          { text: "Scalable machine-learning inference hosted on AWS containers with Docker", icon: "aws" },
         ],
         challenges: [
           {
             problem:
-              "Webhook bursts from upstream product feeds occasionally arrived out of order, corrupting inventory state.",
+              "Bursts of incoming product and inventory updates from Shopify occasionally arrived out of order, risking inaccurate stock numbers.",
             solution:
-              "Added Hookdeck-backed queuing with per-product ordering keys and idempotent upserts, restoring consistent state under load.",
+              "Implemented an orderly queue with automated safeguards and idempotent handling, guaranteeing stock and prices stay 100% accurate under traffic spikes.",
           },
           {
             problem:
-              "Cold-start latency on the AWS inference containers made recommendations feel sluggish on first request.",
+              "Initial delays on machine-learning containers caused visual snack recommendations to feel slow on the first tap.",
             solution:
-              "Kept a small warm pool alive with scheduled pings and moved embedding lookups to Qdrant so only the final ranking hit the container.",
+              "Maintained warm container pools with automated health checks and pre-indexed image similarity in Qdrant, making search results feel near-instant.",
           },
         ],
       },
@@ -152,12 +135,12 @@ export const careerTimeline: CareerItem[] = [
   {
     period: "2023 – 2027",
     headline: "Computer Engineering",
-    role: "B.Tech ( Honours in AI & ML )",
-    org: "Vidyalankar Institute of Technology",
+    role: "B.Tech (Honours in AI & ML)",
+    org: "Vidyalankar Institute of Technology, Mumbai",
     color: "blue",
     bullets: [
       { text: "Specialization in Artificial Intelligence & Machine Learning" },
-      { text: "Core subjects: Java, DBMS, Networks, OS, Algorithms, Distributed Systems, Software Engineering" },
+      { text: "Core subjects: Data Structures, Algorithms, Distributed Systems, Database Systems, Computer Networks, Operating Systems, Software Engineering" },
     ],
   },
 ];
@@ -165,82 +148,97 @@ export const careerTimeline: CareerItem[] = [
 // ─── Featured Work ──────────────────────────────────────────────
 export const featuredWork: WorkProject = {
   title: "Troupe",
-  headline: "My Whole Development Journey in One Project",
-  subtitle: "Mobile App where Trip Organizers plan Itineraries for Like-minded Travelers",
-  description:
-    "Built a secure payment system by integrating Razorpay SDK in-app with Webhook event handling and idempotency keys to prevent duplicate payments. Implemented seat-holding mechanism with cron jobs to clean up expired bookings. Real-time chat using WebSockets, Redis presence indicators and message queues for scalable processing. Optimized media uploads via server-generated presigned URLs. Seamless token-refresh authentication.",
+  headline: "Travel Planning and Booking Platform",
+  subtitle: "A mobile community app where trip organizers publish curated itineraries and travelers discover, reserve, pay, and chat in real time.",
   highlights: [
-    { text: "Razorpay SDK + webhook handling & idempotency keys", icon: "razorpay" },
-    { text: "Seat-holding with cron-job cleanup for expired bookings", icon: "postgres" },
-    { text: "Real-time chat — WebSockets, Redis presence & queues", icon: "redis" },
-    { text: "Presigned URL media uploads via Supabase Storage — reduced server load", icon: "supabase" },
-    { text: "Secure token-refresh auth flow with JWT", icon: "jwt" },
-  ],
-  techStack: [
-    { name: "React Native", icon: "react" },
-    { name: "Expo", icon: "expo" },
-    { name: "FastAPI", icon: "fastapi" },
-    { name: "PostgreSQL", icon: "postgres" },
-    { name: "Redis", icon: "redis" },
-    { name: "Supabase", icon: "supabase" },
+    { text: "Seamless checkout and payments with instant verification via Razorpay and automated webhooks", icon: "razorpay" },
+    { text: "Smart seat-holding countdown: locks spot during checkout and automatically releases unpaid seats via cron cleanup", icon: "postgres" },
+    { text: "Live group chat with active member status and instant delivery powered by WebSockets and Redis", icon: "redis" },
+    { text: "Direct, secure photo and itinerary uploads via Supabase Storage using signed, time-limited URLs", icon: "supabase" },
+    { text: "Safe login and persistent sessions with protected JSON Web Tokens (JWT)", icon: "jwt" },
+    { text: "High-performance backend API services built with Python FastAPI", icon: "fastapi" },
   ],
   images: ["/troupe_app_1.jpeg"],
-  githubUrl: "https://github.com/Sohamm24",
+  githubUrl: "https://github.com/Sohamm24/Troupe-Backend/tree/main",
   demoUrl: "https://github.com/Sohamm24",
-  systemDesignUrl: "https://github.com/Sohamm24",
   challenges: [
     {
       problem:
-        "Duplicate Razorpay webhook deliveries occasionally double-booked a seat before the payment record was finalized.",
+        "Duplicate payment webhook notifications from payment gateways could mistakenly trigger duplicate booking confirmations.",
       solution:
-        "Generated idempotency keys per checkout session and made the booking write a single atomic upsert keyed on that ID, so retried webhooks became safe no-ops.",
+        "Generated unique idempotency keys per checkout session so payment notifications are processed exactly once, safely ignoring duplicates.",
     },
     {
       problem:
-        "Held seats that were never paid for stayed locked and blocked other travelers from booking.",
+        "Abandoned checkout sessions kept seats locked, preventing other interested travelers from booking limited spots.",
       solution:
-        "Added a cron job that sweeps expired holds on an interval and releases them back to the pool, with a short grace window to avoid racing an in-flight payment.",
+        "Engineered an automated background cleanup timer that safely releases unpaid seats back into the available pool after a brief grace window.",
     },
     {
       problem:
-        "Redis-backed presence indicators drifted from real WebSocket connection state after reconnects.",
+        "Users' online/offline statuses in chat drifted when mobile devices briefly lost cell connection or switched Wi-Fi.",
       solution:
-        "Tied presence TTLs to heartbeat pings from the client and reconciled state on every reconnect, so stale 'online' indicators expire automatically.",
+        "Connected presence indicators to lightweight heartbeat pings with Redis auto-expiry, ensuring active indicators stay accurate.",
     },
   ],
 };
 
 export const additionalProjects: WorkProject[] = [
   {
-    title: "TrustDesk AI",
-    headline: "Customer support AI agents with zero trust security",
-    subtitle: "A working prototype for AI-first customer workflows with strict identity controls and secure escalation paths.",
-    description:
-      "Dummy placeholder project for a customer support intelligence platform where AI agents handle triage, summarization, and policy-aware responses without compromising security boundaries.",
+    title: "CreatorIQ",
+    headline: "AI-Powered YouTube Trend Intelligence",
+    subtitle: "An intelligent platform that discovers breakout topics, evaluates channel relevance, predicts trend growth, and drafts video strategies.",
     highlights: [
-      { text: "AI customer triage with human fallback and policy enforcement", icon: "jwt" },
-      { text: "Zero-trust access checks for tool invocation and sensitive data", icon: "clerk" },
-      { text: "Audit logs, session isolation, and controlled escalation for support agents", icon: "docker" },
-    ],
-    techStack: [
-      { name: "FastAPI", icon: "fastapi" },
-      { name: "React", icon: "react" },
-      { name: "PostgreSQL", icon: "postgres" },
-      { name: "JWT", icon: "jwt" },
-      { name: "Docker", icon: "docker" },
+      { text: "Automated YouTube signals discovery: continuously tracks video metrics, search patterns, and viral momentum", icon: "youtube" },
+      { text: "Smart semantic matching: connects trending topics to creator niches using Qdrant vector search", icon: "qdrant" },
+      { text: "90-day trend forecasting powered by LightGBM machine learning models using 85 engineered signals", icon: "lightgbm" },
+      { text: "AI copilot: automatically generates viral hooks, video titles, complete outlines, and SEO tags with live streaming responses", icon: "openrouter" },
+      { text: "Microservices architecture with FastAPI: dedicated services for authentication, channel intelligence, and scheduled trend tracking", icon: "fastapi" },
+      { text: "Containerized deployment with Docker for reliable scaling and seamless updates", icon: "docker" },
     ],
     images: [],
-    githubUrl: "https://github.com/",
-    demoUrl: "https://github.com/",
-    systemDesignUrl: "https://github.com/",
+    githubUrl: "https://github.com/Sohamm24/CreatorIQ",
+    demoUrl: "https://github.com/Sohamm24",
     challenges: [
       {
-        problem: "Support automation risked leaking internal context to the wrong agent or workflow.",
-        solution: "Introduced role-aware guardrails and zero-trust enforcement before any tool or data access was allowed.",
+        problem:
+          "YouTube produces immense volumes of repetitive, low-value noise and irrelevant viral shorts that dilute genuine creator opportunities.",
+        solution:
+          "Built a multi-stage filtering pipeline combining semantic embeddings and engagement thresholds to isolate high-potential, niche-relevant topics.",
       },
       {
-        problem: "Escalations in live support needed to remain transparent without exposing sensitive records.",
-        solution: "Built a reviewed handoff layer with scoped context and full audit trails for every decision.",
+        problem:
+          "Generating comprehensive video ideas, scripts, and SEO outlines takes several seconds, making users feel the app is stuck.",
+        solution:
+          "Implemented Server-Sent Events (SSE) to stream the AI thought process and suggestions word-by-word in real time.",
+      },
+    ],
+  },
+  {
+    title: "Real-Time Orders Streaming Pipeline",
+    headline: "Kafka Streaming Lakehouse & Live Analytics",
+    subtitle: "A real-time data engineering pipeline that ingests simulated UPI e-commerce transactions, handles unreliable data, and delivers instant revenue insights across Indian cities.",
+    highlights: [
+      { text: "Live transaction streaming at high throughput using Apache Kafka partitions keyed by city", icon: "kafka" },
+      { text: "Real-time stream processing with PySpark Structured Streaming for instant aggregation and late-arrival handling", icon: "spark" },
+      { text: "Reliable transactional data storage in Delta Lake tables with zero duplicates and acid guarantees", icon: "deltalake" },
+      { text: "Instant revenue analytics across Indian cities querying millions of records with DuckDB", icon: "postgres" }
+    ],
+    images: [],
+    githubUrl: "https://github.com/Sohamm24/realtime-data-streaming-using-kafka",
+    demoUrl: "https://github.com/Sohamm24",
+    challenges: [
+      {
+        problem:
+          "Corrupted payment entries, network delays, or duplicate network packets could miscalculate store revenues.",
+        solution:
+          "Added strict watermark windows to process late orders, built automatic deduplication, and routed malformed records to an isolated dead-letter queue for inspection.",
+      },
+      {
+        problem:
+          "Sudden traffic surges (tested from 10 to 5,000 events/sec) or pipeline restarts could lead to dropped data or duplicate counting.",
+        solution:
+          "Used checkpointing and Delta Lake's transaction logs to ensure exact once-processing and zero data loss even across system restarts.",
       },
     ],
   },
